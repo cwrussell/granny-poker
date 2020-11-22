@@ -26,3 +26,6 @@ class Card:
         
     def __str__(self):
         return f"{self._face} of {self._suit}"
+        
+    def value(self):
+        return self._value

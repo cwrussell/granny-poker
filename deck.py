@@ -5,10 +5,13 @@ from card import Card
 
 class Deck:
 
-    def __init__(self, values={}):
+    def __init__(self, values={}, waste=False):
         self._values = values
-        card_list = self._create_deck()
-        shuffle(card_list)
+        if not waste:
+            card_list = self._create_deck()
+            shuffle(card_list)
+        else:
+            card_list = []
         self._cards = deque(card_list)
         
     DEFAULT_VALUES = {
@@ -39,8 +42,14 @@ class Deck:
     def next_card(self):
         return self._cards.popleft()
 
-    def add_to_deck(self, card):
-        self._cards.append()
+    def to_right(self, card):
+        self._cards.append(card)
+        
+    def to_left(self, card):
+        self._cards.appendleft(card)
+        
+    def top(self):
+        return str(self._cards[0])
         
     def deal(self, n_hands, n_cards):
         hands = [[] for i in range(n_hands)]
