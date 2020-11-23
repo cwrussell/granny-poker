@@ -51,6 +51,9 @@ class Deck:
     def top(self):
         return str(self._cards[0])
         
+    def top_value(self):
+        return self._cards[0].value()
+        
     def deal(self, n_hands, n_cards):
         hands = [[] for i in range(n_hands)]
         for i in range(n_cards):

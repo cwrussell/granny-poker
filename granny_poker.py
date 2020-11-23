@@ -1,5 +1,6 @@
 import random
 import sys
+import time
 
 from deck import Deck
 from player import GrannyPokerPlayer
@@ -13,10 +14,13 @@ def play(computer, human, deck):
     waste = Deck(values={"K": 0}, waste=True)
     waste.to_left(deck.next_card())
     
+    comp_known = [0, 1]
+    
     # This loop continues until the game is done
     while True:
     
         div()
+        time.sleep(1)
     
         # Pick card
         choice_str = f"To take card from waste pile ({waste.top()}), type 'w'"
@@ -53,6 +57,76 @@ def play(computer, human, deck):
             else:
                 print("Invalid choice.", flush=True)
                 continue
+                
+        # Computer's turn
+        # If know that have less than 10 points, end the game
+        div()
+        time.sleep(1)
+        comp_score = computer.sum()
+        if (len(comp_known) == 4) and (comp_score <= 10):
+            print("Computer is knocking")
+            return computer, human
+            
+        # Take top card from waste pile if <= 4
+        top = waste.top_value()
+        if top <= 4:
+            active_card = waste.next_card()
+            msg = f"Computer took {str(active_card)} from waste pile"
+            
+        # Otherwise take top card from deck
+        else:
+            active_card = deck.next_card()
+            msg = f"Computer took {str(active_card)} from top of deck"
+            
+        # Discard if card value is greater than 4
+        if active_card.value() > 4:
+            msg += f"\nComputer discarded {str(active_card)}"
+            waste.to_left(active_card)
+            print(msg, flush=True)
+            continue
+            
+        # Replace any known cards if their value is greater than 4
+        card_values = {idx: computer.get_card(idx).value() for idx in comp_known}
+        possible_replacements = {idx: val for idx, val in card_values.items() if val > 4}
+        if possible_replacements:
+            diffs = {idx: val - active_card.value() for idx, val in possible_replacements.items()}
+            best = max(list(diffs.values()))
+            for idx, val in diffs.items():
+                if val == best:
+                    discard = computer.get_card(comp_known[idx])
+                    computer.swap(comp_known[idx], active_card)
+                    msg += f"\nComputer replaced {str(discard)} with {str(active_card)}"
+                    waste.to_left(discard)
+                    
+        # If no known cards have a value greater than 4
+        else:
+            
+            # Replace an unknown card if there are unknown cards
+            if len(comp_known) < 4:
+                idx = 2 if 2 not in comp_known else 3
+                discard = computer.get_card(idx)
+                computer.swap(idx, active_card)
+                msg += f"\nComputer replaced {str(discard)} with {str(active_card)}"
+                waste.to_left(discard)
+                comp_known.append(idx)
+                
+            # If all cards are known, pick the one with the greatest difference
+            else:
+                diffs = [computer.get_card(x).value() - active_card.value() for x in range(3)]
+                best = max(diffs)
+                if best > 0:
+                    for i, diff in enumerate(diffs):
+                        if diff == best:
+                            discard = computer.get_card(i)
+                            computer.swap(i, active_card)
+                            msg += f"\nComputer replaced {str(discard)} with {str(active_card)}"
+                            waste.to_left(discard)
+                            
+                # If all of the known cards have a lower or equal value than the active card, just discard
+                else:
+                    msg += f"\nComputer discarded {str(active_cards)}"
+                    waste.to_left(active_card)
+        print(msg, flush=True)
 
 
 def main():
